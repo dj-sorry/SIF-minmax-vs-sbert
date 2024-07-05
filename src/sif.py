@@ -1,4 +1,5 @@
 from typing import Iterable, List, Dict, Generator
+from typing_extensions import deprecated
 import numpy as np
 from collections import defaultdict
 from sklearn.decomposition import TruncatedSVD
@@ -62,11 +63,13 @@ def compute_sif_weights(
     """
     return {word: a / (a + freq) for word, freq in word_freq.items()}
 
-
+"""
+@deprecated
 def compute_sif_embeddings_queries(corpus: List[List[str]], 
                                    word_vectors: Dict[str, np.ndarray], 
                                    sif_weights: Dict[str, float]) -> List[np.ndarray]:
-    """
+"""
+"""
     Compute SIF-weighted sentence embeddings for a list of queries. This function is customized 
     for the dataset format of queries. The different function are needed at this time because there 
     are several passages (of different lengths: from 6 to 10) for each query.
@@ -79,6 +82,7 @@ def compute_sif_embeddings_queries(corpus: List[List[str]],
     Returns:
     List[np.ndarray]: A list of embeddings for each sentence in the corpus.
     """
+"""
     embeddings = []
     for sublist in corpus:
         for sentence in sublist:
@@ -98,21 +102,25 @@ def compute_sif_embeddings_queries(corpus: List[List[str]],
                 embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
     return embeddings
 
-
+@deprecated
 def compute_sif_embeddings_texts(corpus: List[List[str]], 
                                  word_vectors: Dict[str, np.ndarray], 
                                  sif_weights: Dict[str, float]) -> List[List[np.ndarray]]:
     """
-    This one is the version for the texts. Notive that an additional empty list is initialized.
-    
-    Parameters:
-    corpus (List[List[str]]): A nested list where each sublist contains texts.
-    word_vectors (Dict[str, np.ndarray]): A dictionary with words as keys and their vector representations as values.
-    sif_weights (Dict[str, float]): A dictionary with words as keys and their SIF weights as values.
-    
-    Returns:
-    List[List[np.ndarray]]: A list containing embeddings for each sublist of texts.
-    """
+"""
+
+        This one is the version for the texts. Notive that an additional empty list is initialized.
+        
+        Parameters:
+        corpus (List[List[str]]): A nested list where each sublist contains texts.
+        word_vectors (Dict[str, np.ndarray]): A dictionary with words as keys and their vector representations as values.
+        sif_weights (Dict[str, float]): A dictionary with words as keys and their SIF weights as values.
+        
+        Returns:
+        List[List[np.ndarray]]: A list containing embeddings for each sublist of texts.
+        """
+"""
+
     embeddings = []
     for texts in corpus:
         text_embeddings = [] #TODO: create one function to account for both formats.
@@ -133,7 +141,26 @@ def compute_sif_embeddings_texts(corpus: List[List[str]],
                 text_embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
         embeddings.append(text_embeddings)
     return embeddings
-
+"""
+def compute_sif_embeddings(corpus: List[List[str]], word_vectors: Dict[str, np.ndarray], sif_weights: Dict[str, float]) -> List[np.ndarray]:
+    embeddings = []
+    for sublist in corpus:
+        for sentence in sublist:
+            words = sentence.split()
+            vectors = []
+            weights = []
+            for word in words:
+                if word in word_vectors and word in sif_weights:
+                    vectors.append(word_vectors[word])
+                    weights.append(sif_weights[word])
+            if vectors:
+                vectors = np.array(vectors)
+                weights = np.array(weights)
+                weighted_avg = np.average(vectors, axis=0, weights=weights)
+                embeddings.append(weighted_avg)
+            else:
+                embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
+    return embeddings
 
 def remove_pc_sif(embeddings: List[np.ndarray], 
                   n: int = 1, 

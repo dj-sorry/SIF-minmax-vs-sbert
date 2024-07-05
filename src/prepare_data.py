@@ -1,16 +1,26 @@
-import json
-from typing import List, Dict
-import os
+import nltk
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+import pandas as pd
+import string
 
-def load_data(filepath: str) -> List[List[str]]:
-    with open(filepath, 'r') as file:
-        data = json.load(file)
-    return data
+nltk.download('punkt')
+nltk.download('stopwords')
 
-def save_data(data: List[List[str]], filepath: str):
-    with open(filepath, 'w') as file:
-        json.dump(data, file)
+def preprocess_text(text_series: pd.Series) -> pd.Series:
 
-def preprocess_data(data: List[List[str]]) -> List[List[str]]:
-    #TODO: migrate from old repo
-    return data
+    if isinstance(text_series, list): # convert data to series
+        text_series = pd.Series(text_series)
+
+    text_series = text_series.str.lower()
+
+    text_series = text_series.apply(word_tokenize)
+
+    stop_words = set(stopwords.words('english'))
+    punctuation = set(string.punctuation)
+
+    text_series = text_series.apply(
+        lambda tokens: [word for word in tokens if word.isalnum() and word not in stop_words]
+    )
+    
+    return text_series
