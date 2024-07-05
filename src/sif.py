@@ -6,24 +6,6 @@ from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import normalize
 
 
-def flatten(lst: Iterable) -> Generator:
-    """
-    Flatten a nested list structure. This is needed to transform the shape of the MS MARCO dataset
-    where columns have slightly different formats.
-    
-    Parameters:
-    lst (Iterable): A potentially nested list of elements.
-    
-    Yields:
-    elements of the nested list in a flattened structure.
-    """
-    for item in lst:
-        if isinstance(item, Iterable) and not isinstance(item, str):
-            yield from flatten(item)
-        else:
-            yield item
-
-
 def compute_word_frequencies(sentences: List[List[str]]) -> Dict[str, int]:
     """
     Compute word frequencies which is necessary for calulating SIF weights (word_freq in notebook)
@@ -36,8 +18,7 @@ def compute_word_frequencies(sentences: List[List[str]]) -> Dict[str, int]:
     Dict[str, int]: A dictionary with words as keys and their frequencies as values.
     """
     word_freq = defaultdict(int)
-    flattened_sentences = list(flatten(sentences))
-    for sentence in flattened_sentences:
+    for sentence in sentences:
         if isinstance(sentence, str):
             words = sentence.split()
         else:
@@ -45,6 +26,7 @@ def compute_word_frequencies(sentences: List[List[str]]) -> Dict[str, int]:
         for word in words:
             word_freq[word] += 1
     return word_freq
+
 
 
 def compute_sif_weights(
@@ -145,21 +127,21 @@ def compute_sif_embeddings_texts(corpus: List[List[str]],
 def compute_sif_embeddings(corpus: List[List[str]], word_vectors: Dict[str, np.ndarray], sif_weights: Dict[str, float]) -> List[np.ndarray]:
     embeddings = []
     for sublist in corpus:
+        vectors = []
+        weights = []
         for sentence in sublist:
             words = sentence.split()
-            vectors = []
-            weights = []
             for word in words:
                 if word in word_vectors and word in sif_weights:
                     vectors.append(word_vectors[word])
                     weights.append(sif_weights[word])
-            if vectors:
-                vectors = np.array(vectors)
-                weights = np.array(weights)
-                weighted_avg = np.average(vectors, axis=0, weights=weights)
-                embeddings.append(weighted_avg)
-            else:
-                embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
+        if vectors:
+            vectors = np.array(vectors)
+            weights = np.array(weights)
+            weighted_avg = np.average(vectors, axis=0, weights=weights)
+            embeddings.append(weighted_avg)
+        else:
+            embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
     return embeddings
 
 def remove_pc_sif(embeddings: List[np.ndarray], 
@@ -193,3 +175,26 @@ def remove_pc_sif(embeddings: List[np.ndarray],
     embeddings_pc_removed = [normalize(embedding_pc_removed.reshape(1, -1)).flatten() for embedding_pc_removed in embeddings_pc_removed]
 
     return embeddings_pc_removed
+
+
+
+"""
+@deprecated
+def flatten(lst: Iterable) -> Generator:
+    
+    Flatten a nested list structure. This is needed to transform the shape of the MS MARCO dataset
+    where columns have slightly different formats.
+    
+    Parameters:
+    lst (Iterable): A potentially nested list of elements.
+    
+    Yields:
+    elements of the nested list in a flattened structure.
+    
+    for item in lst:
+        if isinstance(item, Iterable) and not isinstance(item, str):
+            yield from flatten(item)
+        else:
+            yield item
+
+"""
