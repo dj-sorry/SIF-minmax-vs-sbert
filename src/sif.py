@@ -1,4 +1,4 @@
-from typing import Iterable, List, Dict, Generator
+from typing import List, Dict
 from typing_extensions import deprecated
 import numpy as np
 from collections import defaultdict
@@ -45,85 +45,6 @@ def compute_sif_weights(
     """
     return {word: a / (a + freq) for word, freq in word_freq.items()}
 
-"""
-@deprecated
-def compute_sif_embeddings_queries(corpus: List[List[str]], 
-                                   word_vectors: Dict[str, np.ndarray], 
-                                   sif_weights: Dict[str, float]) -> List[np.ndarray]:
-"""
-"""
-    Compute SIF-weighted sentence embeddings for a list of queries. This function is customized 
-    for the dataset format of queries. The different function are needed at this time because there 
-    are several passages (of different lengths: from 6 to 10) for each query.
-    
-    Parameters:
-    corpus (List[List[str]]): A nested list where each sublist contains sentences.
-    word_vectors (Dict[str, np.ndarray]): A dictionary with words as keys and their vector representations as values.
-    sif_weights (Dict[str, float]): A dictionary with words as keys and their SIF weights as values.
-    
-    Returns:
-    List[np.ndarray]: A list of embeddings for each sentence in the corpus.
-    """
-"""
-    embeddings = []
-    for sublist in corpus:
-        for sentence in sublist:
-            words = sentence.split()
-            vectors = []
-            weights = []
-            for word in words:
-                if word in word_vectors and word in sif_weights:
-                    vectors.append(word_vectors[word])
-                    weights.append(sif_weights[word])
-            if vectors:
-                vectors = np.array(vectors)
-                weights = np.array(weights)
-                weighted_avg = np.average(vectors, axis=0, weights=weights)
-                embeddings.append(weighted_avg)
-            else:
-                embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
-    return embeddings
-
-@deprecated
-def compute_sif_embeddings_texts(corpus: List[List[str]], 
-                                 word_vectors: Dict[str, np.ndarray], 
-                                 sif_weights: Dict[str, float]) -> List[List[np.ndarray]]:
-    """
-"""
-
-        This one is the version for the texts. Notive that an additional empty list is initialized.
-        
-        Parameters:
-        corpus (List[List[str]]): A nested list where each sublist contains texts.
-        word_vectors (Dict[str, np.ndarray]): A dictionary with words as keys and their vector representations as values.
-        sif_weights (Dict[str, float]): A dictionary with words as keys and their SIF weights as values.
-        
-        Returns:
-        List[List[np.ndarray]]: A list containing embeddings for each sublist of texts.
-        """
-"""
-
-    embeddings = []
-    for texts in corpus:
-        text_embeddings = [] #TODO: create one function to account for both formats.
-        for text in texts:
-            words = text.split()
-            vectors = []
-            weights = []
-            for word in words:
-                if word in word_vectors and word in sif_weights:
-                    vectors.append(word_vectors[word])
-                    weights.append(sif_weights[word])
-            if vectors:
-                vectors = np.array(vectors)
-                weights = np.array(weights)
-                weighted_avg = np.average(vectors, axis=0, weights=weights)
-                text_embeddings.append(weighted_avg)
-            else:
-                text_embeddings.append(np.zeros(next(iter(word_vectors.values())).shape))
-        embeddings.append(text_embeddings)
-    return embeddings
-"""
 def compute_sif_embeddings(corpus: List[List[str]], word_vectors: Dict[str, np.ndarray], sif_weights: Dict[str, float]) -> List[np.ndarray]:
     embeddings = []
     for sublist in corpus:
@@ -172,11 +93,10 @@ def remove_pc_sif(embeddings: List[np.ndarray],
     #you dont need to normalize it. The Rust implementation 
     #and the original code do not perform normalization after the pc removal. 
     #However, our implementation can benefit from it because we calulate similarity later.
+    #Actually, if we discard cosine similarity, it is necessary to normalize the embeddings here
     embeddings_pc_removed = [normalize(embedding_pc_removed.reshape(1, -1)).flatten() for embedding_pc_removed in embeddings_pc_removed]
 
     return embeddings_pc_removed
-
-
 
 """
 @deprecated
